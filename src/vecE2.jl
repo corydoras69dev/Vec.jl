@@ -2,6 +2,8 @@
 VecE2: a 2d euclidean vector
 =#
 
+using Printf
+
 struct VecE2{R<:Real} <: VecE{2,R}
     x::R
     y::R
