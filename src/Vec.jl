@@ -3,6 +3,9 @@ __precompile__()
 module Vec
 
 using StaticArrays
+using LinearAlgebra
+using Printf
+import LinearAlgebra: ⋅, ×
 
 export
     AbstractVec,
@@ -71,13 +74,6 @@ include("common.jl")
 include("vecE2.jl")
 include("vecE3.jl")
 include("vecSE2.jl")
-
-Vec.abs2(a::VecE2) = a.x * a.x + a.y * a.y
-Vec.abs2(a::VecSE2) = a.x * a.x + a.y * a.y
-Vec.hypot(a::VecE2) = sqrt(a.x * a.x + a.y * a.y)
-Vec.hypot(a::VecSE2) = sqrt(a.x * a.x + a.y * a.y)
-Vec.abs(a::VecE2) = sqrt(a.x * a.x + a.y * a.y)
-Vec.abs(a::VecSE2) = sqrt(a.x * a.x + a.y * a.y)
 
 include("geom/geom.jl")
 include("coordinate_transforms.jl")

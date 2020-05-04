@@ -1,4 +1,4 @@
-# let
+let
     q = Quat(1.0,2.0,3.0,4.5)
     @test length(q) == 4
     @test imag(q) == VecE3(1.0,2.0,3.0)
@@ -15,7 +15,7 @@
     @test isapprox(sol, [-0.00250956, -0.948614,  0.316205, mod2pi(-1.84447)], atol=1e-3) ||
           isapprox(sol, [ 0.00250956,  0.948614, -0.316205, mod2pi( 1.84447)], atol=1e-3)
 
-    srand(0)
+    seed!(0)
     for i in 1 : 5
         a = normalize(VecE3(rand(),rand(),rand()))
         b = normalize(VecE3(rand(),rand(),rand()))
@@ -26,11 +26,11 @@
     @test isapprox(angledist(Quat(1,0,0,0), Quat(0,1,0,0)), π, atol=1e-6)
     @test norm(lerp(Quat(1,0,0,0), Quat(0,1,0,0), 0.5) - Quat(√2/2, √2/2, 0, 0)) < 1e-6
 
-    srand(0)
+    seed!(0)
     for i in 1 : 5
         q = rand(Quat)
         @test isapprox(norm(q), 1.0, atol=1e-8)
         @test norm(inv(q)*q - Quat(0,0,0,1)) < 1e-8
         @test norm(q*inv(q) - Quat(0,0,0,1)) < 1e-8
     end
-# end
+end

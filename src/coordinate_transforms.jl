@@ -131,13 +131,12 @@ end
 Base.convert(::Type{VecE3}, p::ECEF) = VecE3(p.x, p.y, p.z)
 Base.convert(::Type{ECEF}, p::VecE3) = ECEF(p.x, p.y, p.z)
 
-"""
-Universal Transverse Mercator coordinate system
-"""
-
 const UTM_LATITUDE_LIMIT_NORTH = deg2rad(84)
 const UTM_LATITUDE_LIMIT_SOUTH = deg2rad(-80)
 
+"""
+Universal Transverse Mercator coordinate system
+"""
 struct UTM <: AbstractCoordinate
     e::Float64 # [m]
     n::Float64 # [m]
@@ -223,12 +222,12 @@ function Base.convert(::Type{LatLonAlt}, ecef::ECEF, datum::GeodeticDatum=WGS_84
     y = ecef.y
     z = ecef.z
 
-    λ = atan2(y, x)
+    λ = atan(y, x)
     p = sqrt(x*x + y*y)
-    θ = atan2(z*a, (p*b))
+    θ = atan(z*a, (p*b))
 
     h = 0.0
-    ϕ = atan2(z,p*(1.0-e²))
+    ϕ = atan(z,p*(1.0-e²))
 
     # the equation diverges at the poles
     if isapprox(abs(θ), π/2, atol=0.1)
@@ -241,7 +240,7 @@ function Base.convert(::Type{LatLonAlt}, ecef::ECEF, datum::GeodeticDatum=WGS_84
         while Δh > 1e-4
             N = a / sqrt(1-e²*sin(ϕ)^2)
             h₂ = p/cos(ϕ) - N
-            ϕ = atan2(z, p*(1-e²*N/(N + h₂)))
+            ϕ = atan(z, p*(1-e²*N/(N + h₂)))
             Δh = abs(h - h₂)
             h = h₂
         end
@@ -264,25 +263,25 @@ function Base.convert(::Type{UTM}, lla::LatLonAlt, datum::GeodeticDatum=WGS_84, 
         error("latitude $(rad2deg(lat)) is out of limits!")
     end
 
-    const FN = 0.0      # false northing, zero in the northern hemisphere
-    const FE = 500000.0 # false easting
-    const ko = 0.9996   # central scale factor
+    FN = 0.0      # false northing, zero in the northern hemisphere
+    FE = 500000.0 # false easting
+    ko = 0.9996   # central scale factor
 
-    zone_centers = -177.0*pi/180 + 6.0*pi/180*collect(0:59) # longitudes of the zone centers
+    zone_centers = collect(0:59).*(6.0*π/180) .- (177.0*π/180) # longitudes of the zone centers
     if zone == -1
-        zone = indmin(map(x->abs(lon - x), zone_centers)) # index of min zone center
+        zone = argmin(map(x->abs(lon - x), zone_centers)) # index of min zone center
     end
     long0 = zone_centers[zone]
 
-    s  = sin(lat)
-    c  = cos(lat)
-    t  = tan(lat)
+    s = sin(lat)
+    c = cos(lat)
+    t = tan(lat)
 
     a = datum.a
     b = datum.b
 
     n  = (a-b)/(a+b)
-    e₁  = sqrt((a^2-b^2)/a^2) # first eccentricity
+    e₁ = sqrt((a^2-b^2)/a^2) # first eccentricity
     ep = sqrt((a^2-b^2)/b^2) # second eccentricity
     nu = a/(1-e₁^2*s^2)^0.5   # radius of curvature in the prime vertical
     dh = lon - long0         # longitudinal distance from central meridian

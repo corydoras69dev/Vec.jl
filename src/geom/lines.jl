@@ -8,7 +8,7 @@ struct Line
     C::VecE2
     θ::Float64
 end
-Line(A::VecE2, B::VecE2) = Line((A+B)/2, atan2(B - A))
+Line(A::VecE2, B::VecE2) = Line((A+B)/2, atan(B - A))
 
 Base.:-(line::Line, V::VecE2) = Line(line.C - V, line.θ)
 Base.:+(line::Line, V::VecE2) = Line(line.C + V, line.θ)
@@ -32,8 +32,8 @@ function get_distance(line::Line, P::VecE2)
         return 0.0
     end
 
-    r = dot(ab, pb)/denom
-    return norm(P - (line.C + r*ab))
+    r = (ab⋅pb)/denom
+    return LinearAlgebra.norm(P - (line.C + r*ab))
 end
 
 
