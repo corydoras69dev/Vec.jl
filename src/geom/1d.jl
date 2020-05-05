@@ -4,7 +4,7 @@ export
 """
 A line segment in one dimension with a ≤ b
 """
-struct LineSegment1D
+immutable LineSegment1D
     a::Float64
     b::Float64
     LineSegment1D(a::Real, b::Real) = new(convert(Float64, min(a,b)), convert(Float64, max(a,b)))

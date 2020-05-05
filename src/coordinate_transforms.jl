@@ -4,16 +4,11 @@ export
     ECEF,
     UTM,
     ENU,
-    NED,
-
-    WGS_84,
-    INTERNATIONAL,
 
     check_is_in_radians,
     ensure_lon_between_pies,
-    deg_min_sec_to_degrees,
-    degrees_to_deg_min_sec,
-    get_earth_radius,
+    deg_rad_min_to_degrees,
+    get_Earth_radius,
 
     GeodeticDatum,
     eccentricity
@@ -24,16 +19,16 @@ export
 Defines a reference ellipsoid used to map a position on the Earth
 relative to said ellipsoid
 """
-struct GeodeticDatum
+type GeodeticDatum
     a::Float64 # equitorial radius
     b::Float64 # polar radius
 end
-const WGS_84        = GeodeticDatum(6378137.0, 6356752.314245)
-const INTERNATIONAL = GeodeticDatum(6378388.0, 6356911.94613)
 
-eccentricity_sq(datum::GeodeticDatum) = 1.0 - datum.b^2 / datum.a^2
-eccentricity(datum::GeodeticDatum) = sqrt(eccentricity_sq(datum))
-function radius_of_curvature_in_the_meridian(ϕ::Float64, datum::GeodeticDatum)
+function eccentricity(datum::GeodeticDatum)
+    d = datum.b/datum.a
+    sqrt(1.0-d*d)
+end
+function radius_of_curvature_in_the_meridian(datum::GeodeticDatum, ϕ::Float64)
 
     # ϕ = meridian angle (latitude)
 
@@ -45,7 +40,7 @@ function radius_of_curvature_in_the_meridian(ϕ::Float64, datum::GeodeticDatum)
 
     ρ
 end
-function radius_of_curvature_in_the_prime_vertical(ϕ::Float64, datum::GeodeticDatum=WGS_84)
+function radius_of_curvature_in_the_prime_vertical(datum::GeodeticDatum, ϕ::Float64)
 
     # ϕ = meridian angle (latitude)
 
@@ -58,7 +53,8 @@ function radius_of_curvature_in_the_prime_vertical(ϕ::Float64, datum::GeodeticD
     ν
 end
 
-
+const WGS_84        = GeodeticDatum(6378137.0, 6356752.314245)
+const INTERNATIONAL = GeodeticDatum(6378388.0, 6356911.94613)
 
 ############################################################################
 #
@@ -67,18 +63,18 @@ end
 #
 ############################################################################
 
-abstract type AbstractCoordinate end
+abstract AbstractCoordinate
 
 """
 The latitude, longitude, altitude coordinate system
 """
-struct LatLonAlt <: AbstractCoordinate
+type LatLonAlt <: AbstractCoordinate
     lat::Float64 # [rad] ϕ, angle between the equatorial plane and the straight line that passes through the point and through the center of the Earth
     lon::Float64 # [rad] λ, angle (typically east) from a reference meridian to another meridian that passes through that point
     alt::Float64 # [m] above reference ellipsoid
 end
 
-Base.print(io::IO, lla::LatLonAlt) = @printf(io, "%6.2f %7.2f %10.2f", rad2deg(lla.lat), rad2deg(lla.lon), lla.alt)
+Base.print(io::IO, lla::LatLonAlt) = @printf("%6.2f %7.2f %10.2f", rad2deg(lla.lat), rad2deg(lla.lon), lla.alt)
 
 function check_is_in_radians(lla::LatLonAlt)
     if abs(lla.lat) > π/2 || abs(lla.lon) > π
@@ -110,11 +106,15 @@ function degrees_to_deg_min_sec(degrees::Real)
     sec = remainder * 60.0
     (convert(Int, deg), convert(Int, min), sec)
 end
-function get_earth_radius(lat::Float64, datum::GeodeticDatum=WGS_84)
+function get_Earth_radius(lat::Float64, lon::Float64, datum::GeodeticDatum=WGS_84)
 
-    a, b = datum.a, datum.b
-    c, s = cos(lat), sin(lat)
-    return sqrt(((a^2*c)^2 + (b^2*s)^2)/((a*c)^2 + (b*s)^2))
+    a = datum.a
+    e = eccentricity(datum)
+    e² = e*e
+
+    slat = sin(lat)
+
+    a / sqrt(1.0 - e²*slat*slat)
 end
 
 Base.convert(::Type{VecE3}, lla::LatLonAlt) = VecE3(lla.lat, lla.lon, lla.alt)
@@ -123,7 +123,7 @@ Base.convert(::Type{LatLonAlt}, p::VecE3) = LatLonAlt(p.x, p.y, p.z)
 """
 The Earth-centered, Earth-fixed coordinate system
 """
-struct ECEF <: AbstractCoordinate
+type ECEF <: AbstractCoordinate
     x::Float64 # [m]
     y::Float64 # [m]
     z::Float64 # [m]
@@ -131,13 +131,14 @@ end
 Base.convert(::Type{VecE3}, p::ECEF) = VecE3(p.x, p.y, p.z)
 Base.convert(::Type{ECEF}, p::VecE3) = ECEF(p.x, p.y, p.z)
 
-const UTM_LATITUDE_LIMIT_NORTH = deg2rad(84)
-const UTM_LATITUDE_LIMIT_SOUTH = deg2rad(-80)
-
 """
 Universal Transverse Mercator coordinate system
 """
-struct UTM <: AbstractCoordinate
+
+const UTM_LATITUDE_LIMIT_NORTH = deg2rad(84)
+const UTM_LATITUDE_LIMIT_SOUTH = deg2rad(-80)
+
+type UTM <: AbstractCoordinate
     e::Float64 # [m]
     n::Float64 # [m]
     u::Float64 # [m] above reference ellipsoid
@@ -157,7 +158,7 @@ end
 East North Up coordinate system
 relative to some point on the surface of the earth
 """
-struct ENU <: AbstractCoordinate
+type ENU <: AbstractCoordinate
     e::Float64 # [m]
     n::Float64 # [m]
     u::Float64 # [m] above reference location
@@ -167,38 +168,28 @@ Base.convert(::Type{ENU}, p::VecE3) = ENU(p.x, p.y, p.z)
 Base.:+(a::ENU, b::ENU) = ENU(a.e+b.e, a.n+b.n, a.u+b.u)
 Base.:-(a::ENU, b::ENU) = ENU(a.e-b.e, a.n-b.n, a.u-b.u)
 
-"""
-North East Down coordinate system
-"""
-struct NED <: AbstractCoordinate
-    n::Float64 # [m]
-    e::Float64 # [m]
-    d::Float64 # [m] below reference location
-end
-Base.convert(::Type{VecE3}, p::NED) = VecE3(p.n, p.e, p.d)
-Base.:+(a::NED, b::NED) = NED(a.n+b.n, a.e+b.e, a.d+b.d)
-Base.:-(a::NED, b::NED) = NED(a.n-b.n, a.e-b.e, a.d-b.d)
-
 ###################
 
 function Base.convert(::Type{ECEF}, lla::LatLonAlt, datum::GeodeticDatum=WGS_84)
 
-    ϕ = lla.lat
-    λ = lla.lon
-    h = lla.alt
+    lat = lla.lat
+    lon = lla.lon
+    alt = lla.alt
 
-    e² = eccentricity_sq(datum)
+    a = datum.a
+    e = eccentricity(datum)
+    e² = e*e
 
-    sϕ = sin(ϕ)
-    cϕ = cos(ϕ)
-    sλ = sin(λ)
-    cλ = cos(λ)
+    slat = sin(lat)
+    clat = cos(lat)
+    slon = sin(lon)
+    clon = cos(lon)
 
-    Rₙ = radius_of_curvature_in_the_prime_vertical(ϕ, datum)
+    RN = a / sqrt(1.0 - e²*slat*slat)
 
-    x = (Rₙ         + h)*cϕ*cλ
-    y = (Rₙ         + h)*cϕ*sλ
-    z = (Rₙ*(1.0-e²)+ h)*sϕ
+    x = (RN + alt)*clat*clon
+    y = (RN + alt)*clat*slon
+    z = (RN*(1.0-e²)+alt)*slat
 
     ECEF(x,y,z)
 end
@@ -216,7 +207,8 @@ function Base.convert(::Type{LatLonAlt}, ecef::ECEF, datum::GeodeticDatum=WGS_84
 
     a = datum.a
     b = datum.b
-    e² = eccentricity_sq(datum)
+    e = eccentricity(datum)
+    e² = e*e
 
     x = ecef.x
     y = ecef.y
@@ -224,26 +216,18 @@ function Base.convert(::Type{LatLonAlt}, ecef::ECEF, datum::GeodeticDatum=WGS_84
 
     λ = atan2(y, x)
     p = sqrt(x*x + y*y)
-    θ = atan2(z*a, (p*b))
+    θ = atan(z*a / (p*b))
 
     h = 0.0
-    ϕ = atan2(z,p*(1.0-e²))
+    ϕ = atan(z/(p*(1.0-e²)))
 
-    # the equation diverges at the poles
-    if isapprox(abs(θ), π/2, atol=0.1)
-        Rₙ = radius_of_curvature_in_the_prime_vertical(ϕ, datum)
-        ϕₛ = sin(ϕ)
-        L = z + e²*Rₙ*ϕₛ
-        h = L / ϕₛ - Rₙ
-    else
-        Δh = Inf
-        while Δh > 1e-4
-            N = a / sqrt(1-e²*sin(ϕ)^2)
-            h₂ = p/cos(ϕ) - N
-            ϕ = atan2(z, p*(1-e²*N/(N + h₂)))
-            Δh = abs(h - h₂)
-            h = h₂
-        end
+    Δh = Inf
+    while Δh > 1e-4
+        N = a / sqrt(1-e²*sin(ϕ)^2)
+        h₂ = p/cos(ϕ) - N
+        ϕ = atan(z/(p*(1-e²*N/(N + h₂))))
+        Δh = abs(h - h₂)
+        h = h₂
     end
 
     ensure_lon_between_pies(LatLonAlt(ϕ, λ, h))
@@ -263,25 +247,25 @@ function Base.convert(::Type{UTM}, lla::LatLonAlt, datum::GeodeticDatum=WGS_84, 
         error("latitude $(rad2deg(lat)) is out of limits!")
     end
 
-    FN = 0.0      # false northing, zero in the northern hemisphere
-    FE = 500000.0 # false easting
-    ko = 0.9996   # central scale factor
+    const FN = 0.0      # false northing, zero in the northern hemisphere
+    const FE = 500000.0 # false easting
+    const ko = 0.9996   # central scale factor
 
-    zone_centers = collect(0:59).*(6.0*π/180) .- (177.0*π/180) # longitudes of the zone centers
+    zone_centers = -177.0*pi/180 + 6.0*pi/180*collect(0:59) # longitudes of the zone centers
     if zone == -1
-        zone = argmin(map(x->abs(lon - x), zone_centers)) # index of min zone center
+        zone = indmin(map(x->abs(lon - x), zone_centers)) # index of min zone center
     end
     long0 = zone_centers[zone]
 
-    s = sin(lat)
-    c = cos(lat)
-    t = tan(lat)
+    s  = sin(lat)
+    c  = cos(lat)
+    t  = tan(lat)
 
     a = datum.a
     b = datum.b
 
     n  = (a-b)/(a+b)
-    e₁ = sqrt((a^2-b^2)/a^2) # first eccentricity
+    e₁  = sqrt((a^2-b^2)/a^2) # first eccentricity
     ep = sqrt((a^2-b^2)/b^2) # second eccentricity
     nu = a/(1-e₁^2*s^2)^0.5   # radius of curvature in the prime vertical
     dh = lon - long0         # longitudinal distance from central meridian
@@ -376,7 +360,7 @@ function Base.convert(::Type{LatLonAlt}, utm::UTM, datum::GeodeticDatum=WGS_84)
     kₒ⁷ = kₒ⁴*kₒ³
     kₒ⁸ = kₒ⁴*kₒ⁴
 
-    ν = radius_of_curvature_in_the_prime_vertical(ϕₚ, datum)
+    ν = radius_of_curvature_in_the_prime_vertical(datum, ϕₚ)
     ν² = ν*ν
     ν³ = ν²*ν
     ν⁴ = ν²*ν²
@@ -385,7 +369,7 @@ function Base.convert(::Type{LatLonAlt}, utm::UTM, datum::GeodeticDatum=WGS_84)
     ν⁷ = ν⁴*ν³
     ν⁸ = ν⁴*ν⁴
 
-    ρ = radius_of_curvature_in_the_meridian(ϕₚ, datum)
+    ρ = radius_of_curvature_in_the_meridian(datum, ϕₚ)
 
     T10 = tanϕₚ/(2ρ*ν*kₒ²)
     T11 = tanϕₚ/(24ρ*ν³*kₒ⁴) * (5.0 + 3*tan²ϕₚ + eₚ²*cos²ϕₚ - 4*eₚ⁴*cosϕₚ - 9*tan²ϕₚ*eₚ²*cos²ϕₚ)
@@ -430,13 +414,12 @@ function Base.convert(::Type{ECEF}, enu::ENU, reference::LatLonAlt)
 
     ECEF(ecef[1] + ref_ecef.x, ecef[2] + ref_ecef.y, ecef[3] +  ref_ecef.z)
 end
-function Base.convert(::Type{ENU}, ecef::ECEF, refLLA::LatLonAlt, refECEF::ECEF=convert(ECEF, refLLA))
+function Base.convert(::Type{ENU}, ecef::ECEF, reference::LatLonAlt)
 
     # http://www.navipedia.net/index.php/Transformations_between_ECEF_and_ENU_coordinates
 
-    ϕ = refLLA.lat
-    λ = refLLA.lon
-    a = refLLA.alt
+    ϕ = reference.lat
+    λ = reference.lon
 
     sϕ, cϕ = sin(ϕ), cos(ϕ)
     sλ, cλ = sin(λ), cos(λ)
@@ -445,11 +428,8 @@ function Base.convert(::Type{ENU}, ecef::ECEF, refLLA::LatLonAlt, refECEF::ECEF=
          -cλ*sϕ  -sλ*sϕ  cϕ;
           cλ*cϕ   sλ*cϕ  sϕ]
 
-    p = [ecef.x - refECEF.x, ecef.y - refECEF.y, ecef.z - refECEF.z]
+    p = [ecef.x, ecef.y, ecef.z]
     enu = R*p
 
     ENU(enu[1], enu[2], enu[3])
 end
-
-Base.convert(::Type{NED}, enu::ENU) = NED(enu.n, enu.e, -enu.u)
-Base.convert(::Type{ENU}, ned::NED) = ENU(ned.e, ned.n, -ned.d)

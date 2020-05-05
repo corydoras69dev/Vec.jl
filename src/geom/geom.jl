@@ -10,39 +10,18 @@ Return the minimum δ such that
 """
 deltaangle(a::Real, b::Real) = atan2(sin(b-a), cos(b-a))
 
-"""
-Distance between two angles
-"""
+# distance between two angles
 angledist( a::Real, b::Real ) = abs(deltaangle(a,b))
 
-"""
-Linear interpolation between angles
-"""
+# linear interpolation between angles
 lerp_angle(a::Real, b::Real, t::AbstractFloat) = a + deltaangle(a, b)*t
 
-"""
-True if the values are collinear within a tolerance
-"""
+# true if the values are collinear within a tolerance
 function are_collinear(a::AbstractVec, b::AbstractVec, c::AbstractVec, tol::Float64=1e-8)
     # http://mathworld.wolfram.com/Collinear.html
     # if val = 0 then they are collinear
     val = a.x*(b.y-c.y) + b.x*(c.y-a.y)+c.x*(a.y-b.y)
     abs(val) < tol
-end
-
-"""
-To find orientation of ordered triplet (p, q, r).
-The function returns following values
-0 --> p, q and r are colinear
-1 --> Clockwise
-2 --> Counterclockwise
-"""
-function orientation(P::VecE2, Q::VecE2, R::VecE2)
-    val = (Q.y - P.y)*(R.x - Q.x) - (Q.x - P.x)*(R.y - Q.y)
-    if val ≈ 0
-        return 0  # colinear
-    end
-    return (val > 0) ? 1 : 2
 end
 
 function inertial2body(point::VecE2, reference::VecSE2)
@@ -100,4 +79,3 @@ include("line_segments.jl")
 include("rays.jl")
 include("projectiles.jl")
 include("solids.jl")
-include("hyperplanes.jl")

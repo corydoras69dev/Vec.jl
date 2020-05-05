@@ -1,25 +1,23 @@
-let
-    @test isapprox(deltaangle(0.0, 0.0),  0.0)
-    @test isapprox(deltaangle(0.0, 1.0),  1.0)
-    @test isapprox(deltaangle(0.0, 2π),  0.0, atol=1e-10)
-    @test isapprox(deltaangle(0.0, π + 1.0), -(π- 1.0))
+@test isapprox(deltaangle(0.0, 0.0),  0.0)
+@test isapprox(deltaangle(0.0, 1.0),  1.0)
+@test isapprox(deltaangle(0.0, 2π),  0.0, atol=1e-10)
+@test isapprox(deltaangle(0.0, π + 1.0), -(π- 1.0))
 
-    @test isapprox(angledist(0.0, 0.0), 0.0)
-    @test isapprox(angledist(0.0, 1.0), 1.0)
-    @test isapprox(angledist(0.0, 2π), 0.0, atol=1e-10)
-    @test isapprox(angledist(0.0, π + 1.0), π- 1.0)
+@test isapprox(angledist(0.0, 0.0), 0.0)
+@test isapprox(angledist(0.0, 1.0), 1.0)
+@test isapprox(angledist(0.0, 2π), 0.0, atol=1e-10)
+@test isapprox(angledist(0.0, π + 1.0), π- 1.0)
 
-    @test isapprox(lerp_angle(0.0, 0.0, 1.0), 0.0)
-    @test isapprox(lerp_angle(0.0, 2π, 0.5), 0.0, atol=1e-10)
-    @test isapprox(lerp_angle(0.0, 2.0, 0.75),  1.5)
-    @test isapprox(lerp_angle(0.0, 2π-2, 0.75), -1.5)
+@test isapprox(lerp_angle(0.0, 0.0, 1.0), 0.0)
+@test isapprox(lerp_angle(0.0, 2π, 0.5), 0.0, atol=1e-10)
+@test isapprox(lerp_angle(0.0, 2.0, 0.75),  1.5)
+@test isapprox(lerp_angle(0.0, 2π-2, 0.75), -1.5)
 
-    @test are_collinear(VecE2(0.0,0.0), VecE2(1.0,1.0), VecE2(2.0,2.0))
-    @test are_collinear(VecE2(0.0,0.0), VecE2(1.0,1.0), VecE2(-2.0,-2.0))
-    @test are_collinear(VecE2(0.0,0.0), VecE2(0.5,1.0), VecE2(1.0,2.0))
-    @test are_collinear(VecE2(1.0,2.0), VecE2(0.0,0.0), VecE2(0.5,1.0))
-    @test !are_collinear(VecE2(0.0,0.0), VecE2(1.0,0.0), VecE2(0.0,1.0))
-end
+@test are_collinear(VecE2(0.0,0.0), VecE2(1.0,1.0), VecE2(2.0,2.0))
+@test are_collinear(VecE2(0.0,0.0), VecE2(1.0,1.0), VecE2(-2.0,-2.0))
+@test are_collinear(VecE2(0.0,0.0), VecE2(0.5,1.0), VecE2(1.0,2.0))
+@test are_collinear(VecE2(1.0,2.0), VecE2(0.0,0.0), VecE2(0.5,1.0))
+@test !are_collinear(VecE2(0.0,0.0), VecE2(1.0,0.0), VecE2(0.0,1.0))
 
 let
     seg = LineSegment1D(0,1)
@@ -106,21 +104,14 @@ let
     L2 = LineSegment(VecE2(0,0), VecE2(-1,1))
     @test angledist(L, L2) ≈ π/2
     @test !parallel(L, L2)
-    @test intersects(L, L2)
 
     L2 = LineSegment(VecE2(0,0), VecE2(1,-1))
     @test angledist(L, L2) ≈ π/2
     @test !parallel(L, L2)
-    @test intersects(L, L2)
 
     L2 = LineSegment(VecE2(0,0), VecE2(1,-1)) + VecE2(5,-7)
     @test angledist(L, L2) ≈ π/2
     @test !parallel(L, L2)
-    @test !intersects(L, L2)
-
-    @test  intersects(L, LineSegment(VecE2(1,1), VecE2(2,-1)))
-    @test !intersects(L, LineSegment(VecE2(2,2), VecE2(5,6)))
-    @test !intersects(L, LineSegment(VecE2(-5,-5), VecE2(5,-5)))
 end
 
 let
@@ -142,9 +133,6 @@ let
     @test !intersects(Ray(0,0,0), LineSegment(VecE2(0,1), VecE2(1,1)))
     @test  intersects(Ray(0,0,0), LineSegment(VecE2(1,0), VecE2(2,0)))
     @test !intersects(Ray(0,0,0), LineSegment(VecE2(-1,0), VecE2(-2,0)))
-
-    @test isapprox(intersect(VecSE2(4,0,3pi/4), LineSegment(VecE2(5.6,0), VecE2(0,3.6))),
-                   VecE2(1.12, 2.88), atol=1e-3)
 end
 
 let
@@ -201,24 +189,22 @@ let
     # @test isapprox(d_PCA, 1.0)
 end
 
-let
-    @test  contains(Circ(0,0,1.0), VecE2(0,0))
-    @test !contains(Circ(2,0,1.0), VecE2(0,0))
-    @test  contains(Circ(2,0,1.0), VecE2(1.5,0))
-    @test  contains(Circ(2,0,3,1.0), VecE3(1.5,0,3))
+@test  contains(Circ(0,0,1.0), VecE2(0,0))
+@test !contains(Circ(2,0,1.0), VecE2(0,0))
+@test  contains(Circ(2,0,1.0), VecE2(1.5,0))
+@test  contains(Circ(2,0,3,1.0), VecE3(1.5,0,3))
 
-    box = AABB(VecE2(0.0, 0.5), 2.0, 5.0)
-    @test  contains(box, VecE2( 0.0,0.0))
-    @test  contains(box, VecE2(-1.0,0.0))
-    @test !contains(box, VecE2(-2.0,0.0))
-    @test !contains(box, VecE2( 1.0,3.1))
+box = AABB(VecE2(0.0, 0.5), 2.0, 5.0)
+@test  contains(box, VecE2( 0.0,0.0))
+@test  contains(box, VecE2(-1.0,0.0))
+@test !contains(box, VecE2(-2.0,0.0))
+@test !contains(box, VecE2( 1.0,3.1))
 
-    box = AABB(VecE2(-1.0, -2.0), VecE2(1.0, 3.0))
-    @test  contains(box, VecE2( 0.0,0.0))
-    @test  contains(box, VecE2(-1.0,0.0))
-    @test !contains(box, VecE2(-2.0,0.0))
-    @test !contains(box, VecE2( 1.0,3.1))
-end
+box = AABB(VecE2(-1.0, -2.0), VecE2(1.0, 3.0))
+@test  contains(box, VecE2( 0.0,0.0))
+@test  contains(box, VecE2(-1.0,0.0))
+@test !contains(box, VecE2(-2.0,0.0))
+@test !contains(box, VecE2( 1.0,3.1))
 
 let
     box = OBB(VecSE2(0.0, 0.5, 0.0), 2.0, 5.0)
@@ -244,44 +230,4 @@ let
     @test isapprox(box2.aabb.center.x,  1.0)
     @test isapprox(box2.aabb.center.y,  0.0, atol=1e-10)
     @test isapprox(angledist(box2.θ,  π), 0.0, atol=1e-10)
-end
-
-let
-    plane = Plane3()
-    @test plane.normal == VecE3(1.0,0.0,0.0)
-    @test plane.offset == 0.0
-
-    plane = Plane3(VecE3(2.0,0.0,0.0), 0.5)
-    @test plane.normal == VecE3(1.0,0.0,0.0)
-    @test plane.offset == 0.5
-
-    plane = Plane3(VecE3(2.0,0.0,0.0), VecE3(0.0,0.0,0.0))
-    @test plane.normal == VecE3(1.0,0.0,0.0)
-    @test plane.offset == 0.0
-
-    plane = Plane3(VecE3(2.0,0.0,0.0), VecE3(1.0,1.0,1.0))
-    @test plane.normal == VecE3(1.0,0.0,0.0)
-    @test isapprox(plane.offset, -1.0, atol=1e-10)
-
-    plane = Plane3(VecE3(1.0,1.0,0.0), VecE3(1.0,0.0,0.0), VecE3(0.0,0.0,0.0))
-    @test norm(plane.normal - VecE3(0.0,0.0,1.0)) < 1e-8
-    @test isapprox(plane.offset, 0.0, atol=1e-10)
-
-    plane = Plane3(VecE3(0.0,0.0,0.0), VecE3(1.0,0.0,0.0), VecE3(1.0,1.0,0.0))
-    @test norm(plane.normal - VecE3(0.0,0.0,-1.0)) < 1e-8
-    @test isapprox(plane.offset, 0.0, atol=1e-10)
-
-    plane = Plane3()
-    @test isapprox(get_signed_distance(plane, VecE3( 0.0,0.0,0.0)),  0.0, atol=1e-10)
-    @test isapprox(get_signed_distance(plane, VecE3( 1.0,0.0,0.0)),  1.0, atol=1e-10)
-    @test isapprox(get_signed_distance(plane, VecE3(-1.0,0.0,0.0)), -1.0, atol=1e-10)
-    @test isapprox(get_signed_distance(plane, VecE3( 1.0,0.5,0.7)),  1.0, atol=1e-10)
-    @test isapprox(get_signed_distance(plane, VecE3(-1.0,0.7,0.5)), -1.0, atol=1e-10)
-    @test isapprox(get_distance(plane, VecE3(-1.0,0.7,0.5)), 1.0, atol=1e-10)
-    @test norm(proj(VecE3(-1.0,0.7,0.5), plane) - VecE3(0.0,0.7,0.5)) < 1e-10
-    @test get_side(plane, VecE3( 0.0,0.0,0.0)) ==  0
-    @test get_side(plane, VecE3( 1.0,0.0,0.0)) ==  1
-    @test get_side(plane, VecE3(-1.0,0.0,0.0)) == -1
-    @test get_side(plane, VecE3( 1.0,0.5,0.7)) ==  1
-    @test get_side(plane, VecE3(-1.0,0.7,0.5)) == -1
 end
