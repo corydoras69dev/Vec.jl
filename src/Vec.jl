@@ -3,6 +3,7 @@ __precompile__()
 module Vec
 
 using StaticArrays
+using Printf
 
 export
     AbstractVec,
