@@ -4,6 +4,7 @@ module Vec
 
 using StaticArrays
 using Printf
+using Math
 
 export
     AbstractVec,
