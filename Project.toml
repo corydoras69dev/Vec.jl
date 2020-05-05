@@ -1,6 +1,6 @@
 name = "Vec"
 uuid = "44eeaf0b-fee4-471f-9310-ed6585cb3142"
-repo = "https://github.com/sisl/Vec.jl.git"
+repo = "https://github.com/corydoras69dev/Vec.jl.git"
 version = "2.0.2"
 
 [deps]
