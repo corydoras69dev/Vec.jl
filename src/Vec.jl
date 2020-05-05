@@ -3,8 +3,8 @@ __precompile__()
 module Vec
 
 using StaticArrays
-using LinearAlgebra
-using Printf
+import LinearAlgebra
+import Printf: @printf
 import LinearAlgebra: ⋅, ×
 
 export

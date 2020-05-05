@@ -1,14 +1,14 @@
 const DUMMY_PRECISION = 1e-12
 
-Base.isfinite(a::AbstractVec) = all(isfinite, a)
-Base.isinf(a::AbstractVec) = any(isinf, a)
-Base.isnan(a::AbstractVec) = any(isnan, a)
+Base.isfinite(a::AbstractVec) = all(isfinite.(a))
+Base.isinf(a::AbstractVec) = any(isinf.(a))
 
-function StaticArrays.similar_type(::Type{V}, ::Type{F}, size::Size{N}) where {V<:AbstractVec, F<:AbstractFloat, N}
+function StaticArrays.similar_type(::Type{V}, ::Type{F}, size::Size) where {V<:AbstractVec, F<:AbstractFloat}
+    # TODO: implement this for other types
     if size == Size(V) && eltype(V) == F
         return V
-    else # convert back to SArray
-        return SArray{Tuple{N...},F,length(size),prod(size)}
+    else
+        error("StaticArrays.similar_type is not yet implemented for Vec except for Float64 and matching size.")
     end
 end
 
