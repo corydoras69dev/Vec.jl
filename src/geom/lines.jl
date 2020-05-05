@@ -4,7 +4,7 @@ export
     get_distance,
     get_side
 
-immutable Line
+struct Line
     C::VecE2
     θ::Float64
 end
@@ -27,19 +27,19 @@ function get_distance(line::Line, P::VecE2)
     ab = polar(1.0, line.θ)
     pb = P - line.C
 
-    denom = abs2(ab)
+    denom = normsquared(ab)
     if denom ≈ 0.0
         return 0.0
     end
 
     r = dot(ab, pb)/denom
-    return abs(P - (line.C + r*ab))
+    return norm(P - (line.C + r*ab))
 end
 
 
 """
 What side of the line you are on
-Is -1 if on the left, 1 if on the right, and 0 if on the line
+Is 1 if on the left, -1 if on the right, and 0 if on the line
 """
 function get_side(line::Line, p::VecE2, ε::Float64=1e-10)
     ab = polar(1.0, line.θ)
@@ -47,6 +47,6 @@ function get_side(line::Line, p::VecE2, ε::Float64=1e-10)
     if abs(signed_dist) < ε
         return 0
     else
-        return sign(signed_dist)
+        return convert(Int, sign(signed_dist))
     end
 end
