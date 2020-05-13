@@ -1,4 +1,4 @@
-export
+﻿export
     LineSegment1D
 
 """

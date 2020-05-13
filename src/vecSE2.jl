@@ -1,4 +1,4 @@
-#=
+﻿#=
 VecSE2: a 2d euclidean vector with an orientation
 =#
 

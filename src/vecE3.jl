@@ -1,4 +1,4 @@
-#=
+﻿#=
 VecE3: a 3d euclidean vector
 =#
 

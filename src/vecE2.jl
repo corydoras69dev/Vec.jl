@@ -1,4 +1,4 @@
-#=
+﻿#=
 VecE2: a 2d euclidean vector
 =#
 

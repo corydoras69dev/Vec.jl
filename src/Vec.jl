@@ -1,4 +1,4 @@
-__precompile__()
+﻿__precompile__()
 
 module Vec
 
